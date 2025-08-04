@@ -15,7 +15,10 @@
       "Bash(rm:*)",
       "Bash(npm run build:*)",
       "Bash(npm install)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(npx vercel:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
