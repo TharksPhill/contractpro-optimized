@@ -4,18 +4,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gerador de Contratos</title>
-    <meta name="description" content="Sistema de geração automatizada de contratos" />
-    <meta name="author" content="Lovable" />
+    
+    <!-- Performance optimizations -->
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Critical resource hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.gpteng.co">
+    
+    <!-- Preload critical resources -->
+    <link rel="modulepreload" href="/src/main.tsx">
+    <link rel="modulepreload" href="/src/App.tsx">
+    <link rel="modulepreload" href="/src/pages/DashboardOptimized.tsx">
+    
+    <title>ContractPRO - Gestão de Contratos</title>
+    <meta name="description" content="Sistema profissional de gestão e automação de contratos empresariais" />
+    <meta name="keywords" content="contratos, gestão, automação, assinatura digital, faturamento" />
+    <meta name="author" content="ContractPRO" />
 
-    <meta property="og:title" content="Gerador de Contratos" />
-    <meta property="og:description" content="Sistema de geração automatizada de contratos" />
+    <!-- Open Graph -->
+    <meta property="og:title" content="ContractPRO - Gestão de Contratos" />
+    <meta property="og:description" content="Sistema profissional de gestão e automação de contratos empresariais" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
+    <meta property="og:site_name" content="ContractPRO" />
+    
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="ContractPRO - Gestão de Contratos" />
+    <meta name="twitter:description" content="Sistema profissional de gestão e automação de contratos empresariais" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Critical CSS inline (minimal) -->
+    <style>
+      html { font-family: system-ui, -apple-system, sans-serif; }
+      body { margin: 0; background: #f8fafc; }
+      #root { min-height: 100vh; }
+      .loading { display: flex; align-items: center; justify-content: center; height: 100vh; }
+    </style>
   </head>
 
   <body>
