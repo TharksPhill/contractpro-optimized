@@ -2,7 +2,7 @@ import React, { useState, useMemo, memo, lazy, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   BarChart3, Bell, FileText, Home, Package, Settings, Shield, DollarSign,
-  Globe, Map, ShoppingCart, Menu
+  Globe, Map, ShoppingCart, Menu, User, Receipt, Clock, TrendingUp
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -51,9 +51,13 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
     let pendingSignatures = 0;
     let totalSignatures = 0;
     let trialContracts = 0;
+    let trialExpiringSoon = 0;
     let renewalsNeeded = 0;
+    let renewalsExpiringSoon = 0;
 
     const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     
     contracts.forEach(contract => {
       if (contract.contractors) {
@@ -72,10 +76,16 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
 
       if (contract.status === "Período de Teste") {
         trialContracts++;
+        
+        if (contract.end_date) {
+          const endDate = new Date(contract.end_date);
+          if (endDate <= sevenDaysFromNow && endDate >= now) {
+            trialExpiringSoon++;
+          }
+        }
       }
 
       if (contract.renewal_date && contract.status === "Ativo") {
-        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
         let renewalDate: Date | null = null;
         
         if (contract.renewal_date.includes('-')) {
@@ -90,6 +100,9 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
         if (renewalDate && !isNaN(renewalDate.getTime()) && 
             renewalDate <= thirtyDaysFromNow && renewalDate >= now) {
           renewalsNeeded++;
+          if (renewalDate <= sevenDaysFromNow) {
+            renewalsExpiringSoon++;
+          }
         }
       }
     });
@@ -98,8 +111,8 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
       mapStats: { totalStates: statesSet.size, totalCities: citiesSet.size, totalContracts },
       billingStats: { totalRevenue, activeContracts: activeContracts.length },
       signatureStats: { pendingSignatures, totalSignatures },
-      trialStats: { trialContracts, expiringSoon: 0 },
-      renewalStats: { renewalsNeeded, expiringSoon: 0 }
+      trialStats: { trialContracts, expiringSoon: trialExpiringSoon },
+      renewalStats: { renewalsNeeded, expiringSoon: renewalsExpiringSoon }
     };
   }, [contracts]);
 
@@ -198,7 +211,7 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
                 icon={FileText}
                 label="Contratos"
                 isExpanded={expandedMenus.has("contracts")}
-                hasActiveChild={isActive("contracts") || isActive("create")}
+                hasActiveChild={isActive("contracts") || isActive("create") || isActive("trial-contracts") || isActive("contract-signatures") || isActive("rejection-review") || isActive("contract-renewals")}
                 onToggle={() => toggleMenu("contracts")}
                 isCollapsed={isCollapsed}
                 isMobile={isMobile}
@@ -215,6 +228,40 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
                     onClick={onNewContract}
                   />
                   <SidebarMenuItem
+                    label="Renovações"
+                    isActive={isActive("contract-renewals")}
+                    onClick={() => handleNavigation("contract-renewals")}
+                    badge={stats.renewalStats.renewalsNeeded > 0 ? (
+                      <div className="flex gap-1">
+                        <div className="bg-orange-500/20 text-orange-100 text-xs px-2 py-0.5 rounded">
+                          {stats.renewalStats.renewalsNeeded}
+                        </div>
+                        {stats.renewalStats.expiringSoon > 0 && (
+                          <div className="bg-red-500/20 text-red-100 text-xs px-1 py-0.5 rounded">
+                            !
+                          </div>
+                        )}
+                      </div>
+                    ) : undefined}
+                  />
+                  <SidebarMenuItem
+                    label="Período de Teste"
+                    isActive={isActive("trial-contracts")}
+                    onClick={() => handleNavigation("trial-contracts")}
+                    badge={stats.trialStats.trialContracts > 0 ? (
+                      <div className="flex gap-1">
+                        <div className="bg-orange-500/20 text-orange-100 text-xs px-2 py-0.5 rounded">
+                          {stats.trialStats.trialContracts}
+                        </div>
+                        {stats.trialStats.expiringSoon > 0 && (
+                          <div className="bg-red-500/20 text-red-100 text-xs px-1 py-0.5 rounded">
+                            !
+                          </div>
+                        )}
+                      </div>
+                    ) : undefined}
+                  />
+                  <SidebarMenuItem
                     label="Assinaturas"
                     isActive={isActive("contract-signatures")}
                     onClick={() => handleNavigation("contract-signatures")}
@@ -223,6 +270,11 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
                         {stats.signatureStats.pendingSignatures}
                       </div>
                     ) : undefined}
+                  />
+                  <SidebarMenuItem
+                    label="Revisão de Rejeições"
+                    isActive={isActive("rejection-review")}
+                    onClick={() => handleNavigation("rejection-review")}
                   />
                 </div>
               </SidebarMenu>
@@ -233,7 +285,7 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
                 icon={DollarSign}
                 label="Financeiro"
                 isExpanded={expandedMenus.has("financial")}
-                hasActiveChild={isActive("billing") || isActive("tax-management")}
+                hasActiveChild={isActive("billing") || isActive("employee-costs") || isActive("company-costs") || isActive("tax-management") || isActive("bank-slip-management") || isActive("prolabore") || isActive("cost-plan-management") || isActive("profit-analysis")}
                 onToggle={() => toggleMenu("financial")}
                 isCollapsed={isCollapsed}
                 isMobile={isMobile}
@@ -254,9 +306,191 @@ const AppSidebarModular = memo(({ activeView, onViewChange, onNewContract }: App
                     }
                   />
                   <SidebarMenuItem
+                    label="Custos de Funcionários"
+                    isActive={isActive("employee-costs")}
+                    onClick={() => handleNavigation("employee-costs")}
+                  />
+                  <SidebarMenuItem
+                    label="Custos da Empresa"
+                    isActive={isActive("company-costs")}
+                    onClick={() => handleNavigation("company-costs")}
+                  />
+                  <SidebarMenuItem
                     label="Gestão de Impostos"
                     isActive={isActive("tax-management")}
                     onClick={() => handleNavigation("tax-management")}
+                    badge={<Receipt className="h-4 w-4 flex-shrink-0" />}
+                  />
+                  <SidebarMenuItem
+                    label="Valor do Boleto"
+                    isActive={isActive("bank-slip-management")}
+                    onClick={() => handleNavigation("bank-slip-management")}
+                    badge={<Receipt className="h-4 w-4 flex-shrink-0" />}
+                  />
+                  <SidebarMenuItem
+                    label="Pró-labore"
+                    isActive={isActive("prolabore")}
+                    onClick={() => handleNavigation("prolabore")}
+                  />
+                  <SidebarMenuItem
+                    label="Gestão de Planos de Custo"
+                    isActive={isActive("cost-plan-management")}
+                    onClick={() => handleNavigation("cost-plan-management")}
+                  />
+                  <SidebarMenuItem
+                    label="Análise de Lucros"
+                    isActive={isActive("profit-analysis")}
+                    onClick={() => handleNavigation("profit-analysis")}
+                  />
+                </div>
+              </SidebarMenu>
+            </Suspense>
+
+            <Suspense fallback={<div className="h-12 bg-blue-800/20 rounded animate-pulse" />}>
+              <SidebarMenu
+                icon={ShoppingCart}
+                label="Gestão de Custos de Produtos"
+                isExpanded={expandedMenus.has("products")}
+                hasActiveChild={isActive("product-registration") || isActive("product-profit-analysis")}
+                onToggle={() => toggleMenu("products")}
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+              >
+                <div className="space-y-1 p-2 ml-2">
+                  <SidebarMenuItem
+                    label="Cadastro de Produtos"
+                    isActive={isActive("product-registration")}
+                    onClick={() => handleNavigation("product-registration")}
+                  />
+                  <SidebarMenuItem
+                    label="Análise de Lucros de Produtos (DRE)"
+                    isActive={isActive("product-profit-analysis")}
+                    onClick={() => handleNavigation("product-profit-analysis")}
+                  />
+                </div>
+              </SidebarMenu>
+            </Suspense>
+
+            <Suspense fallback={<div className="h-12 bg-blue-800/20 rounded animate-pulse" />}>
+              <SidebarMenu
+                icon={Globe}
+                label="Análises Geográficas"
+                isExpanded={expandedMenus.has("geographic")}
+                hasActiveChild={isActive("brazil-map") || isActive("regional-analysis") || isActive("geographic-statistics")}
+                onToggle={() => toggleMenu("geographic")}
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+              >
+                <div className="space-y-1 p-2 ml-2">
+                  <SidebarMenuItem
+                    label="Mapa do Brasil"
+                    isActive={isActive("brazil-map")}
+                    onClick={() => handleNavigation("brazil-map")}
+                    badge={
+                      <div className="bg-emerald-500/20 text-emerald-100 text-xs px-2 py-0.5 rounded">
+                        {stats.mapStats.totalContracts}
+                      </div>
+                    }
+                  />
+                  <SidebarMenuItem
+                    label="Análise Regional"
+                    isActive={isActive("regional-analysis")}
+                    onClick={() => handleNavigation("regional-analysis")}
+                    badge={
+                      <div className="bg-purple-500/20 text-purple-100 text-xs px-2 py-0.5 rounded">
+                        {stats.mapStats.totalStates}
+                      </div>
+                    }
+                  />
+                  <SidebarMenuItem
+                    label="Estatísticas Geográficas"
+                    isActive={isActive("geographic-statistics")}
+                    onClick={() => handleNavigation("geographic-statistics")}
+                    badge={
+                      <div className="bg-green-500/20 text-green-100 text-xs px-2 py-0.5 rounded">
+                        {stats.mapStats.totalCities}
+                      </div>
+                    }
+                  />
+                </div>
+              </SidebarMenu>
+            </Suspense>
+
+            <Suspense fallback={<div className="h-12 bg-blue-800/20 rounded animate-pulse" />}>
+              <SidebarMenu
+                icon={Package}
+                label="Gestão & Administração"
+                isExpanded={expandedMenus.has("management")}
+                hasActiveChild={isActive("plans-management") || isActive("admin-management") || isActive("statistics")}
+                onToggle={() => toggleMenu("management")}
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+              >
+                <div className="space-y-1 p-2 ml-2">
+                  <SidebarMenuItem
+                    label="Gerenciar Planos"
+                    isActive={isActive("plans-management")}
+                    onClick={() => handleNavigation("plans-management")}
+                  />
+                  <SidebarMenuItem
+                    label="Administradores"
+                    isActive={isActive("admin-management")}
+                    onClick={() => handleNavigation("admin-management")}
+                  />
+                  <SidebarMenuItem
+                    label="Estatísticas"
+                    isActive={isActive("statistics")}
+                    onClick={() => handleNavigation("statistics")}
+                  />
+                </div>
+              </SidebarMenu>
+            </Suspense>
+
+            <Suspense fallback={<div className="h-12 bg-blue-800/20 rounded animate-pulse" />}>
+              <SidebarMenu
+                icon={Bell}
+                label="Comunicação & Suporte"
+                isExpanded={expandedMenus.has("communication")}
+                hasActiveChild={isActive("chat-management") || isActive("notifications")}
+                onToggle={() => toggleMenu("communication")}
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+              >
+                <div className="space-y-1 p-2 ml-2">
+                  <SidebarMenuItem
+                    label="Chat Inteligente"
+                    isActive={isActive("chat-management")}
+                    onClick={() => handleNavigation("chat-management")}
+                  />
+                  <SidebarMenuItem
+                    label="Notificações"
+                    isActive={isActive("notifications")}
+                    onClick={() => handleNavigation("notifications")}
+                  />
+                </div>
+              </SidebarMenu>
+            </Suspense>
+
+            <Suspense fallback={<div className="h-12 bg-blue-800/20 rounded animate-pulse" />}>
+              <SidebarMenu
+                icon={Settings}
+                label="Configurações"
+                isExpanded={expandedMenus.has("settings")}
+                hasActiveChild={isActive("profile") || isActive("system-settings")}
+                onToggle={() => toggleMenu("settings")}
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+              >
+                <div className="space-y-1 p-2 ml-2">
+                  <SidebarMenuItem
+                    label="Perfil da Empresa"
+                    isActive={isActive("profile")}
+                    onClick={() => handleNavigation("profile")}
+                  />
+                  <SidebarMenuItem
+                    label="Configurações do Sistema"
+                    isActive={isActive("system-settings")}
+                    onClick={() => handleNavigation("system-settings")}
                   />
                 </div>
               </SidebarMenu>
